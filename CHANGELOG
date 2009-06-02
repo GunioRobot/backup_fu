@@ -1,3 +1,6 @@
+### June 02, 2009
+- Removed dependency to amazon_s3.yml
+
 ### January 29, 2009
 - Added bucket name to the list of keys pulled from amazon_s3.yml (Jonathan Vaught)
 - Uses RightAWS instead of AWS-S3 (Randy Schmidt)
