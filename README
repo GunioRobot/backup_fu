@@ -56,7 +56,7 @@ Backing up both your database + static files:
 
 Restoring from S3:
   BACKUP_FILE=myapp_1999-12-31_12345679_db.tar.gz rake backup_fu:restore
-  
+
 Advanced Configuration
 ======================
 
@@ -92,7 +92,7 @@ If you are experiencing any difficulties, the first thing you should do is enabl
 dropping this into config/backup_fu.yml:
 
   verbose: true
-	
+
 --- Mysqldump Issues
 
 If your 'mysqldump' command is not in your path, you will need to specify it explicitly.
@@ -145,7 +145,7 @@ This may result if you are using a symlink for your static dir, such as:
   public/static -> /shared/apps/foo/static
 
 The solution to this is to specify the absolute static path in config/backup_fu.yml:
- 
+
   static_paths: /shared/apps/foo/static
 
 

@@ -11,7 +11,7 @@ task :backup do
 end
 
 namespace :backup_fu do
-  
+
   desc "Copies over the example backup_fu.yml file to config/"
   task :setup do
     target = File.join($backup_fu_path, 'config', 'backup_fu.yml.example')
@@ -23,7 +23,7 @@ namespace :backup_fu do
       puts "\nExample backup_fu.yml copied to config/.  Please edit this file before proceeding.\n\nSee 'rake -T backup_fu' for more commands.\n\n"
     end
   end
-  
+
   desc "Dumps the database locally.  Does *not* upload to S3."
   task :dump do
     b = BackupFu.new
@@ -42,13 +42,13 @@ namespace :backup_fu do
     b.backup
     b.backup_static
   end
-  
+
   desc "Clean up old backups. By default 5 backups are kept (you can change this with with keep_backups key in config/backup_fu.yml)."
   task :cleanup do
     b = BackupFu.new
     b.cleanup
   end
-  
+
   desc "List backups in S3"
   task :s3_backups do
     b = BackupFu.new
@@ -75,13 +75,13 @@ namespace :backup_fu do
       b = BackupFu.new
       b.dump_static
     end
-    
+
     desc "Backups up static files to Amazon S3. For configuration see the backup_fu README."
     task :backup do
       b = BackupFu.new
       b.backup_static
     end
   end
-  
-  
+
+
 end

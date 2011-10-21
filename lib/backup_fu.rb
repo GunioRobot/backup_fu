@@ -8,16 +8,16 @@ class BackupFuConfigError < StandardError; end
 class S3ConnectError < StandardError; end
 
 class BackupFu
-  
+
   def initialize
-    db_conf = YAML.load_file(File.join(RAILS_ROOT, 'config', 'database.yml')) 
+    db_conf = YAML.load_file(File.join(RAILS_ROOT, 'config', 'database.yml'))
     @db_conf = db_conf[RAILS_ENV].symbolize_keys
-    
+
     raw_config = File.read(File.join(RAILS_ROOT, 'config', 'backup_fu.yml'))
-    erb_config = ERB.new(raw_config).result 
+    erb_config = ERB.new(raw_config).result
     fu_conf    = YAML.load(erb_config)
     @fu_conf   = fu_conf[RAILS_ENV].symbolize_keys
-    
+
     @fu_conf[:s3_bucket]
     @fu_conf[:aws_access_key_id]
     @fu_conf[:aws_secret_access_key]
@@ -29,7 +29,7 @@ class BackupFu
     check_conf
     create_dirs
   end
-  
+
   def sqlcmd_options
     host, port, password = '', '', ''
 
@@ -53,7 +53,7 @@ class BackupFu
   end
 
   def pgpassword_prefix
-    if !@db_conf[:password].blank? 
+    if !@db_conf[:password].blank?
       "PGPASSWORD=#{@db_conf[:password]}"
     end
   end
@@ -70,20 +70,20 @@ class BackupFu
     `#{cmd}`
 
     if !@fu_conf[:disable_compression]
-      compress_db(dump_base_path, db_filename) 
+      compress_db(dump_base_path, db_filename)
       File.unlink full_dump_path
     end
   end
 
   def backup
     dump
-    
+
     file = final_db_dump_path()
     puts "\nBacking up to S3: #{file}\n" if @verbose
-    
+
     store_file(file)
   end
-  
+
   def list_backups
     s3_connection.bucket(@fu_conf[:s3_bucket]).keys.map(&:to_s)
   end
@@ -105,10 +105,10 @@ class BackupFu
   def restore_backup(key)
     raise "Restore not implemented for #{@db_conf[:adapter]}" unless @db_conf[:adapter] == 'postgresql'
     raise 'Restore not implemented for zip' if @fu_conf[:compressor] == 'zip'
-    
+
     restore_file_name = @fu_conf[:disable_compression] ? 'restore.sql' : 'restore.tar.gz'
     restore_file = Tempfile.new(restore_file_name)
-    
+
     open(restore_file.path, 'w') do |fh|
       puts "Fetching #{key} to #{restore_file.path}"
       s3_connection.bucket(@fu_conf[:s3_bucket]).get(key) do |chunk|
@@ -125,7 +125,7 @@ class BackupFu
       puts "\nUntar: #{cmd}\n" if @verbose
       `#{cmd}`
     end
-    
+
     prepare_db_for_restore
 
     # Do the actual restore
@@ -141,7 +141,7 @@ class BackupFu
   end
 
   ## Static-file Dump/Backup methods
-  
+
   def dump_static
     if !@fu_conf[:static_paths]
       raise BackupFuConfigError, 'No static paths are defined in config/backup_fu.yml.  See README.'
@@ -149,13 +149,13 @@ class BackupFu
     paths = @fu_conf[:static_paths].split(' ')
     compress_static(paths)
   end
-  
+
   def backup_static
     dump_static
-    
+
     file = final_static_dump_path()
     puts "\nBacking up Static files to S3: #{file}\n" if @verbose
-    
+
     store_file(file)
   end
 
@@ -183,24 +183,24 @@ class BackupFu
 
     end
   end
-  
+
   private
-  
+
   def s3
     @s3 ||= RightAws::S3.new(@fu_conf[:aws_access_key_id],
                              @fu_conf[:aws_secret_access_key])
   end
-  
+
   def s3_bucket
     @s3_bucket ||= s3.bucket(@fu_conf[:s3_bucket], true, 'private')
   end
-  
+
   def store_file(file)
     key = s3_bucket.key(File.basename(file))
     key.data = open(file)
     key.put(nil, 'private')
   end
-  
+
   def s3_connection
     @s3 ||= begin
       RightAws::S3.new(@fu_conf[:aws_access_key_id], @fu_conf[:aws_secret_access_key])
@@ -223,7 +223,7 @@ class BackupFu
       end
     end
   end
-  
+
   #! dump_path is totally the wrong name here
   def dump_path
     dump = {:postgresql => 'pg_dump',:mysql => 'mysqldump'}
@@ -240,7 +240,7 @@ class BackupFu
   def dump_base_path
     @fu_conf[:dump_base_path] || File.join(RAILS_ROOT, 'tmp', 'backup')
   end
-  
+
   def db_filename
     "#{@fu_conf[:app_name]}_#{ @timestamp }_db.sql"
   end
@@ -287,11 +287,11 @@ class BackupFu
   def create_dirs
     ensure_directory_exists(dump_base_path)
   end
-  
+
   def ensure_directory_exists(dir)
     FileUtils.mkdir_p(dir) unless File.exist?(dir)
   end
-  
+
   def niceify(cmd)
     if @fu_conf[:enable_nice]
       "nice -n -#{@fu_conf[:nice_level]} #{cmd}"
@@ -303,7 +303,7 @@ class BackupFu
   def datetime_formatted
     Time.now.strftime("%Y-%m-%d") + "_#{ Time.now.tv_sec }"
   end
-  
+
   def compress_db(dump_base_path, db_filename)
     compressed_path = File.join(dump_base_path, db_filename_compressed)
 
@@ -369,7 +369,7 @@ class BackupFu
     else
       password_option = ''
     end
-    
+
     "-j #{password_option}"
   end
 
